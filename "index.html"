@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Составитель Рунических Ставов</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(139, 69, 19, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(218, 165, 32, 0.1) 0%, transparent 50%),
+                linear-gradient(135deg, #2c1810 0%, #1a0f08 100%);
+            color: #f4e4c1;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 100px,
+                    rgba(139, 69, 19, 0.03) 100px,
+                    rgba(139, 69, 19, 0.03) 102px
+                ),
+                repeating-linear-gradient(
+                    -45deg,
+                    transparent,
+                    transparent 100px,
+                    rgba(218, 165, 32, 0.02) 100px,
+                    rgba(218, 165, 32, 0.02) 102px
+                );
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: 
+                linear-gradient(90deg, transparent 0%, rgba(139, 69, 19, 0.1) 20%, rgba(139, 69, 19, 0.3) 50%, rgba(139, 69, 19, 0.1) 80%, transparent 100%),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 8px,
+                    rgba(218, 165, 32, 0.1) 8px,
+                    rgba(218, 165, 32, 0.1) 10px
+                );
+            border-radius: 15px;
+            border: 3px solid #8b4513;
+            border-image: linear-gradient(45deg, #8b4513, #daa520, #8b4513) 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊';
+            position: absolute;
+            top: 10px;
+            left: 0;
+            right: 0;
+            color: rgba(218, 165, 32, 0.3);
+            font-size: 0.8rem;
+            letter-spacing: 8px;
+        }
+
+        .header::after {
+            content: '◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊ ◊';
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            color: rgba(218, 165, 32, 0.3);
+            font-size: 0.8rem;
+            letter-spacing: 8px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #daa520;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .rune-library {
+            background: 
+                radial-gradient(circle at center, rgba(139, 69, 19, 0.2) 0%, rgba(139, 69, 19, 0.1) 100%),
+                repeating-conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(218, 165, 32, 0.05) 30deg, transparent 60deg);
+            border-radius: 15px;
+            padding: 25px;
+            border: 3px solid #8b4513;
+            border-image: repeating-linear-gradient(45deg, #8b4513 0px, #daa520 10px, #8b4513 20px) 1;
+            position: relative;
+        }
+
+        .rune-library::before {
+            content: '⟨ ⟩ ⟨ ⟩ ⟨ ⟩ ⟨ ⟩ ⟨ ⟩ ⟨ ⟩ ⟨ ⟩ ⟨ ⟩';
+            position: absolute;
+            top: 5px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(218, 165, 32, 0.2);
+            font-size: 0.7rem;
+            letter-spacing: 4px;
+        }
+
+        .rune-library h2 {
+            color: #daa520;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+
+        .runes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .rune-card {
+            background: 
+                radial-gradient(circle at 30% 30%, rgba(218, 165, 32, 0.15) 0%, rgba(218, 165, 32, 0.05) 70%),
+                linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, transparent 100%);
+            border: 2px solid #8b4513;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rune-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 3px,
+                    rgba(218, 165, 32, 0.1) 3px,
+                    rgba(218, 165, 32, 0.1) 4px
+                ),
+                repeating-linear-gradient(
+                    -45deg,
+                    transparent,
+                    transparent 3px,
+                    rgba(139, 69, 19, 0.1) 3px,
+                    rgba(139, 69, 19, 0.1) 4px
+                );
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .rune-card:hover {
+            background: rgba(218, 165, 32, 0.2);
+            border-color: #daa520;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(218, 165, 32, 0.3);
+        }
+
+        .rune-symbol {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #daa520;
+            margin-bottom: 5px;
+        }
+
+        .rune-name {
+            font-size: 0.8rem;
+            color: #f4e4c1;
+            margin-bottom: 3px;
+        }
+
+        .rune-meaning {
+            font-size: 0.7rem;
+            color: #ccc;
+            opacity: 0.8;
+        }
+
+        .став-builder {
+            background: 
+                radial-gradient(circle at center, rgba(139, 69, 19, 0.2) 0%, rgba(139, 69, 19, 0.1) 100%),
+                repeating-conic-gradient(from 45deg at 50% 50%, transparent 0deg, rgba(218, 165, 32, 0.05) 30deg, transparent 60deg);
+            border-radius: 15px;
+            padding: 25px;
+            border: 3px solid #8b4513;
+            border-image: repeating-linear-gradient(-45deg, #8b4513 0px, #daa520 10px, #8b4513 20px) 1;
+            position: relative;
+        }
+
+        .став-builder::before {
+            content: '⟩ ⟨ ⟩ ⟨ ⟩ ⟨ ⟩ ⟨ ⟩ ⟨ ⟩ ⟨ ⟩ ⟨ ⟩ ⟨';
+            position: absolute;
+            top: 5px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(218, 165, 32, 0.2);
+            font-size: 0.7rem;
+            letter-spacing: 4px;
+        }
+
+        .став-builder h2 {
+            color: #daa520;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+
+        .став-canvas {
+            background: 
+                radial-gradient(circle at center, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 100%),
+                repeating-radial-gradient(circle at center, transparent 0px, transparent 20px, rgba(218, 165, 32, 0.05) 20px, rgba(218, 165, 32, 0.05) 22px);
+            border: 3px dashed #8b4513;
+            border-radius: 15px;
+            min-height: 200px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .став-canvas::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    30deg,
+                    transparent,
+                    transparent 15px,
+                    rgba(139, 69, 19, 0.1) 15px,
+                    rgba(139, 69, 19, 0.1) 16px
+                ),
+                repeating-linear-gradient(
+                    -30deg,
+                    transparent,
+                    transparent 15px,
+                    rgba(218, 165, 32, 0.05) 15px,
+                    rgba(218, 165, 32, 0.05) 16px
+                );
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .став-canvas.empty::before {
+            content: "Перетащите руны сюда или нажмите на них";
+            color: #8b4513;
+            font-style: italic;
+            text-align: center;
+            width: 100%;
+        }
+
+        .став-rune {
+            background: rgba(218, 165, 32, 0.2);
+            border: 2px solid #daa520;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .став-rune:hover {
+            background: rgba(218, 165, 32, 0.3);
+        }
+
+        .став-rune .remove-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            background: 
+                linear-gradient(135deg, #8b4513, #a0522d),
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(218, 165, 32, 0.1) 2px,
+                    rgba(218, 165, 32, 0.1) 3px
+                );
+            color: #f4e4c1;
+            border: 2px solid #8b4513;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(218, 165, 32, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #a0522d, #8b4513);
+            border-color: #daa520;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #daa520, #b8860b);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #b8860b, #daa520);
+        }
+
+        .став-info {
+            background: 
+                linear-gradient(135deg, rgba(139, 69, 19, 0.25) 0%, rgba(139, 69, 19, 0.15) 100%),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 40px,
+                    rgba(218, 165, 32, 0.05) 40px,
+                    rgba(218, 165, 32, 0.05) 42px
+                );
+            border-radius: 15px;
+            padding: 25px;
+            border: 3px solid #8b4513;
+            border-image: repeating-linear-gradient(90deg, #8b4513 0px, #daa520 15px, #8b4513 30px) 1;
+            margin-top: 30px;
+            position: relative;
+        }
+
+        .став-info::before {
+            content: '◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈';
+            position: absolute;
+            top: 8px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(218, 165, 32, 0.2);
+            font-size: 0.6rem;
+            letter-spacing: 6px;
+        }
+
+        .став-info::after {
+            content: '◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈ ◈';
+            position: absolute;
+            bottom: 8px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(218, 165, 32, 0.2);
+            font-size: 0.6rem;
+            letter-spacing: 6px;
+        }
+
+        .став-info h3 {
+            color: #daa520;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .став-description {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #daa520;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid #8b4513;
+            border-radius: 8px;
+            color: #f4e4c1;
+            font-size: 1rem;
+        }
+
+        .search-box::placeholder {
+            color: #8b4513;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .runes-grid {
+                grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            }
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: #f4e4c1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            max-width: 200px;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Составитель Рунических Ставов ⚡</h1>
+            <p>Создавайте мощные рунические комбинации для достижения ваших целей</p>
+        </div>
+
+        <div class="main-content">
+            <div class="rune-library">
+                <h2>📚 Библиотека Рун</h2>
+                <input type="text" class="search-box" id="searchBox" placeholder="Поиск рун...">
+                <div class="runes-grid" id="runesGrid">
+                    <!-- Руны будут добавлены через JavaScript -->
+                </div>
+            </div>
+
+            <div class="став-builder">
+                <h2>🔮 Конструктор Става</h2>
+                <div class="став-canvas empty" id="stavCanvas">
+                    <!-- Выбранные руны будут здесь -->
+                </div>
+                <div class="controls">
+                    <button class="btn" onclick="clearStav()">Очистить</button>
+                    <button class="btn btn-primary" onclick="analyzeStav()">Анализировать Став</button>
+                    <button class="btn" onclick="saveStav()">Сохранить</button>
+                    <button class="btn" onclick="generateRandomStav()">Случайный Став</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="став-info" id="stavInfo" style="display: none;">
+            <h3>🔍 Анализ Рунического Става</h3>
+            <div class="став-description" id="stavDescription">
+                <!-- Описание става будет здесь -->
+            </div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // База данных рун
+        const runes = [
+            { symbol: 'ᚠ', name: 'Феху', meaning: 'Богатство, скот', description: 'Материальное благополучие, достаток, новые возможности' },
+            { symbol: 'ᚢ', name: 'Уруз', meaning: 'Дикий бык', description: 'Сила, энергия, здоровье, мужество' },
+            { symbol: 'ᚦ', name: 'Турисаз', meaning: 'Великан', description: 'Защита, разрушение препятствий, мощь' },
+            { symbol: 'ᚨ', name: 'Ансуз', meaning: 'Бог', description: 'Мудрость, общение, вдохновение, знания' },
+            { symbol: 'ᚱ', name: 'Райдо', meaning: 'Путешествие', description: 'Движение, путь, развитие, прогресс' },
+            { symbol: 'ᚲ', name: 'Кеназ', meaning: 'Факел', description: 'Знания, творчество, озарение, трансформация' },
+            { symbol: 'ᚷ', name: 'Гебо', meaning: 'Дар', description: 'Партнерство, обмен, гармония, любовь' },
+            { symbol: 'ᚹ', name: 'Вуньо', meaning: 'Радость', description: 'Счастье, успех, исполнение желаний' },
+            { symbol: 'ᚺ', name: 'Хагалаз', meaning: 'Град', description: 'Разрушение, очищение, кардинальные перемены' },
+            { symbol: 'ᚾ', name: 'Наутиз', meaning: 'Нужда', description: 'Необходимость, ограничения, терпение' },
+            { symbol: 'ᛁ', name: 'Иса', meaning: 'Лед', description: 'Остановка, замораживание, концентрация' },
+            { symbol: 'ᛃ', name: 'Йера', meaning: 'Год', description: 'Урожай, циклы, справедливое вознаграждение' },
+            { symbol: 'ᛇ', name: 'Эйваз', meaning: 'Тис', description: 'Защита, выносливость, связь миров' },
+            { symbol: 'ᛈ', name: 'Перт', meaning: 'Тайна', description: 'Скрытое знание, интуиция, женская сила' },
+            { symbol: 'ᛉ', name: 'Альгиз', meaning: 'Лось', description: 'Защита, связь с высшими силами' },
+            { symbol: 'ᛊ', name: 'Соулу', meaning: 'Солнце', description: 'Успех, победа, жизненная сила, целостность' },
+            { symbol: 'ᛏ', name: 'Тейваз', meaning: 'Тюр', description: 'Справедливость, победа, мужество, лидерство' },
+            { symbol: 'ᛒ', name: 'Беркана', meaning: 'Береза', description: 'Рост, плодородие, новые начинания, материнство' },
+            { symbol: 'ᛖ', name: 'Эваз', meaning: 'Лошадь', description: 'Движение, прогресс, партнерство, доверие' },
+            { symbol: 'ᛗ', name: 'Манназ', meaning: 'Человек', description: 'Человечность, сотрудничество, интеллект' },
+            { symbol: 'ᛚ', name: 'Лагуз', meaning: 'Вода', description: 'Интуиция, эмоции, течение жизни, очищение' },
+            { symbol: 'ᛜ', name: 'Ингуз', meaning: 'Инг', description: 'Плодородие, завершение, внутренний рост' },
+            { symbol: 'ᛞ', name: 'Дагаз', meaning: 'День', description: 'Прорыв, просветление, новый день, трансформация' },
+            { symbol: 'ᛟ', name: 'Отила', meaning: 'Наследие', description: 'Наследство, традиции, дом, стабильность' }
+        ];
+
+        let currentStav = [];
+        let savedStavs = JSON.parse(localStorage.getItem('savedStavs')) || [];
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            renderRunes();
+            setupSearch();
+            setupTooltips();
+        });
+
+        function renderRunes(filteredRunes = runes) {
+            const runesGrid = document.getElementById('runesGrid');
+            runesGrid.innerHTML = '';
+
+            filteredRunes.forEach(rune => {
+                const runeCard = document.createElement('div');
+                runeCard.className = 'rune-card';
+                runeCard.innerHTML = `
+                    <div class="rune-symbol">${rune.symbol}</div>
+                    <div class="rune-name">${rune.name}</div>
+                    <div class="rune-meaning">${rune.meaning}</div>
+                `;
+                
+                runeCard.addEventListener('click', () => addRuneToStav(rune));
+                runeCard.setAttribute('data-tooltip', rune.description);
+                
+                runesGrid.appendChild(runeCard);
+            });
+        }
+
+        function setupSearch() {
+            const searchBox = document.getElementById('searchBox');
+            searchBox.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                const filtered = runes.filter(rune => 
+                    rune.name.toLowerCase().includes(query) ||
+                    rune.meaning.toLowerCase().includes(query) ||
+                    rune.description.toLowerCase().includes(query)
+                );
+                renderRunes(filtered);
+            });
+        }
+
+        function setupTooltips() {
+            const tooltip = document.getElementById('tooltip');
+            
+            document.addEventListener('mouseover', function(e) {
+                if (e.target.hasAttribute('data-tooltip')) {
+                    const tooltipText = e.target.getAttribute('data-tooltip');
+                    tooltip.textContent = tooltipText;
+                    tooltip.classList.add('show');
+                    
+                    const rect = e.target.getBoundingClientRect();
+                    tooltip.style.left = rect.left + 'px';
+                    tooltip.style.top = (rect.top - tooltip.offsetHeight - 10) + 'px';
+                }
+            });
+            
+            document.addEventListener('mouseout', function(e) {
+                if (e.target.hasAttribute('data-tooltip')) {
+                    tooltip.classList.remove('show');
+                }
+            });
+        }
+
+        function addRuneToStav(rune) {
+            currentStav.push(rune);
+            renderStav();
+        }
+
+        function renderStav() {
+            const stavCanvas = document.getElementById('stavCanvas');
+            
+            if (currentStav.length === 0) {
+                stavCanvas.className = 'став-canvas empty';
+                stavCanvas.innerHTML = '';
+                return;
+            }
+            
+            stavCanvas.className = 'став-canvas';
+            stavCanvas.innerHTML = '';
+            
+            currentStav.forEach((rune, index) => {
+                const stavRune = document.createElement('div');
+                stavRune.className = 'став-rune';
+                stavRune.innerHTML = `
+                    <div class="rune-symbol">${rune.symbol}</div>
+                    <div class="rune-name">${rune.name}</div>
+                    <button class="remove-btn" onclick="removeRuneFromStav(${index})">×</button>
+                `;
+                stavCanvas.appendChild(stavRune);
+            });
+        }
+
+        function removeRuneFromStav(index) {
+            currentStav.splice(index, 1);
+            renderStav();
+        }
+
+        function clearStav() {
+            currentStav = [];
+            renderStav();
+            document.getElementById('stavInfo').style.display = 'none';
+        }
+
+        function analyzeStav() {
+            if (currentStav.length === 0) {
+                alert('Добавьте руны в став для анализа');
+                return;
+            }
+            
+            const stavInfo = document.getElementById('stavInfo');
+            const stavDescription = document.getElementById('stavDescription');
+            
+            let analysis = `<h4>Состав става (${currentStav.length} рун):</h4>`;
+            analysis += '<ul>';
+            
+            currentStav.forEach(rune => {
+                analysis += `<li><strong>${rune.symbol} ${rune.name}</strong> - ${rune.description}</li>`;
+            });
+            
+            analysis += '</ul>';
+            
+            // Общий анализ
+            analysis += '<h4>Общая энергетика става:</h4>';
+            analysis += '<p>' + generateStavAnalysis() + '</p>';
+            
+            // Рекомендации по активации
+            analysis += '<h4>Рекомендации по активации:</h4>';
+            analysis += '<p>Для активации данного става рекомендуется использовать медитацию, визуализацию цели и произнесение имен рун. Лучшее время для работы - ';
+            analysis += getRecommendedTime() + '.</p>';
+            
+            stavDescription.innerHTML = analysis;
+            stavInfo.style.display = 'block';
+        }
+
+        function generateStavAnalysis() {
+            const themes = {
+                protection: ['Альгиз', 'Турисаз', 'Эйваз'],
+                wealth: ['Феху', 'Йера', 'Отила'],
+                love: ['Гебо', 'Беркана', 'Вуньо'],
+                power: ['Уруз', 'Тейваз', 'Соулу'],
+                wisdom: ['Ансуз', 'Кеназ', 'Манназ'],
+                change: ['Хагалаз', 'Дагаз', 'Райдо']
+            };
+            
+            let dominantThemes = [];
+            
+            for (let theme in themes) {
+                let count = 0;
+                themes[theme].forEach(runeName => {
+                    if (currentStav.some(rune => rune.name === runeName)) {
+                        count++;
+                    }
+                });
+                if (count > 0) {
+                    dominantThemes.push({ theme, count });
+                }
+            }
+            
+            dominantThemes.sort((a, b) => b.count - a.count);
+            
+            let analysis = 'Данный став ';
+            
+            if (dominantThemes.length > 0) {
+                const mainTheme = dominantThemes[0].theme;
+                switch (mainTheme) {
+                    case 'protection':
+                        analysis += 'направлен на защиту и оборону от негативных воздействий.';
+                        break;
+                    case 'wealth':
+                        analysis += 'способствует привлечению материального благополучия и процветания.';
+                        break;
+                    case 'love':
+                        analysis += 'работает с энергиями любви, гармонии и отношений.';
+                        break;
+                    case 'power':
+                        analysis += 'усиливает личную силу, лидерские качества и уверенность.';
+                        break;
+                    case 'wisdom':
+                        analysis += 'развивает мудрость, интуицию и способность к обучению.';
+                        break;
+                    case 'change':
+                        analysis += 'катализирует перемены и трансформацию в жизни.';
+                        break;
+                }
+            } else {
+                analysis += 'имеет сбалансированную энергетику и может использоваться для общих целей.';
+            }
+            
+            return analysis;
+        }
+
+        function getRecommendedTime() {
+            const times = [
+                'восход солнца',
+                'полдень',
+                'закат',
+                'полночь',
+                'растущая луна',
+                'полнолуние'
+            ];
+            return times[Math.floor(Math.random() * times.length)];
+        }
+
+        function saveStav() {
+            if (currentStav.length === 0) {
+                alert('Нечего сохранять - добавьте руны в став');
+                return;
+            }
+            
+            const name = prompt('Введите название для става:');
+            if (name) {
+                const stavToSave = {
+                    name: name,
+                    runes: [...currentStav],
+                    created: new Date().toLocaleDateString()
+                };
+                
+                savedStavs.push(stavToSave);
+                localStorage.setItem('savedStavs', JSON.stringify(savedStavs));
+                alert('Став сохранен!');
+            }
+        }
+
+        function generateRandomStav() {
+            const count = Math.floor(Math.random() * 5) + 3; // 3-7 рун
+            currentStav = [];
+            
+            for (let i = 0; i < count; i++) {
+                const randomRune = runes[Math.floor(Math.random() * runes.length)];
+                currentStav.push(randomRune);
+            }
+            
+            renderStav();
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'983c96e1702fc045',t:'MTc1ODY1NzIxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
