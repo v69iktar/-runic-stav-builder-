@@ -1,0 +1,1980 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Руна и её Состояние - Электронная книга</title>
+    <style>
+        body {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #e8e8e8;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .ebook-container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 100vh;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 300px;
+            background: linear-gradient(180deg, #2a2a4e 0%, #1e1e3a 100%);
+            border-right: 2px solid rgba(255, 215, 0, 0.3);
+            padding: 2rem 1rem;
+            overflow-y: auto;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .book-title {
+            font-size: 1.2rem;
+            color: #ffd700;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .toc-item {
+            padding: 0.8rem 1rem;
+            margin: 0.5rem 0;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .toc-item:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-left-color: #ffd700;
+        }
+
+        .toc-item.active {
+            background: rgba(255, 215, 0, 0.2);
+            border-left-color: #ffd700;
+            color: #ffd700;
+        }
+
+        .toc-chapter {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .toc-rune {
+            font-size: 0.8rem;
+            margin-left: 1rem;
+            color: #c9c9c9;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 300px;
+            padding: 2rem 3rem;
+            background: rgba(255, 255, 255, 0.02);
+            position: relative;
+        }
+
+        .page {
+            display: none;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.8;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            color: #ffd700;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .page-subtitle {
+            font-size: 1.2rem;
+            color: #c9c9c9;
+            font-style: italic;
+        }
+
+        .rune-display {
+            text-align: center;
+            margin: 3rem 0;
+        }
+
+        .rune-symbol-large {
+            font-size: 6rem;
+            color: #ffd700;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            display: block;
+            margin-bottom: 1rem;
+            animation: runeGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes runeGlow {
+            from { text-shadow: 0 0 30px rgba(255, 215, 0, 0.5); }
+            to { text-shadow: 0 0 50px rgba(255, 215, 0, 0.8), 0 0 70px rgba(255, 215, 0, 0.3); }
+        }
+
+        .content-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+        }
+
+        .content-text p {
+            margin-bottom: 1.5rem;
+        }
+
+        .content-text strong {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .quote-box {
+            background: rgba(255, 215, 0, 0.1);
+            border-left: 4px solid #ffd700;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+        }
+
+        /* Navigation Controls */
+        .nav-controls {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 200;
+        }
+
+        .nav-btn {
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Toggle Sidebar Button */
+        .sidebar-toggle {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            z-index: 300;
+            background: rgba(255, 215, 0, 0.9);
+            color: #1a1a2e;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background: #ffd700;
+            transform: scale(1.1);
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 215, 0, 0.2);
+            z-index: 400;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ff8c00);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 280px;
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.visible {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .rune-symbol-large {
+                font-size: 4rem;
+            }
+            
+            .nav-controls {
+                bottom: 1rem;
+                right: 1rem;
+                flex-direction: column;
+            }
+        }
+
+        /* Book-specific styles */
+        .author-info {
+            text-align: center;
+            margin: 3rem 0;
+            padding: 2rem;
+            background: rgba(255, 215, 0, 0.05);
+            border-radius: 15px;
+        }
+
+        .cover-image-container {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .cover-image-container img {
+            max-width: 100%;
+            height: auto;
+            max-height: 70vh;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .cover-image-container img:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 40px rgba(255, 215, 0, 0.2);
+        }
+
+        .diamond {
+            color: #ffd700;
+            font-size: 1.2rem;
+            animation: sparkle 2s ease-in-out infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .rune-meaning-box {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(138, 43, 226, 0.1) 100%);
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .page-number {
+            position: absolute;
+            bottom: 1rem;
+            right: 2rem;
+            color: #888;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Bar -->
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <!-- Sidebar Toggle -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+    <div class="ebook-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar" id="sidebar">
+            <div class="book-title">РУНА И ЕЁ СОСТОЯНИЕ</div>
+            
+            <div class="toc-item toc-chapter active" onclick="showPage(0)">
+                Обложка
+            </div>
+            
+            <div class="toc-item toc-chapter" onclick="showPage(1)">
+                Введение
+            </div>
+            
+            <div class="toc-item toc-chapter" onclick="showPage(2)">
+                Философия Рун
+            </div>
+            
+            <div class="toc-item toc-chapter" onclick="showPage(3)">
+                24 Состояния Силы
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(4)">
+                1. Феху - Богатство
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(5)">
+                2. Уруз - Сила
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(6)">
+                3. Турисаз - Защита
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(7)">
+                4. Ансуз - Мудрость
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(8)">
+                5. Райдо - Путь
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(9)">
+                6. Кеназ - Знание
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(10)">
+                7. Гебо - Дар
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(11)">
+                8. Вуньо - Радость
+            </div>
+            
+            <div class="toc-item toc-chapter" onclick="showPage(12)">
+                Второй Атт - Трансформация
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(13)">
+                9. Хагалаз - Разрушение
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(14)">
+                10. Наутиз - Нужда
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(15)">
+                11. Иса - Лёд
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(16)">
+                12. Йера - Урожай
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(17)">
+                13. Эйваз - Защита
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(18)">
+                14. Перт - Тайна
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(19)">
+                15. Альгиз - Защита
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(20)">
+                16. Соулу - Солнце
+            </div>
+            
+            <div class="toc-item toc-chapter" onclick="showPage(21)">
+                Третий Атт - Мастерство
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(22)">
+                17. Тейваз - Воин
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(23)">
+                18. Беркана - Рост
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(24)">
+                19. Эваз - Движение
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(25)">
+                20. Манназ - Человек
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(26)">
+                21. Лагуз - Поток
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(27)">
+                22. Ингуз - Плодородие
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(28)">
+                23. Одал - Наследие
+            </div>
+            
+            <div class="toc-item toc-rune" onclick="showPage(29)">
+                24. Дагаз - Рассвет
+            </div>
+            
+            <div class="toc-item toc-chapter" onclick="showPage(30)">
+                Карта завершения
+            </div>
+            
+            <div class="toc-item toc-chapter" onclick="showPage(31)">
+                Заключение
+            </div>
+            
+            <div class="toc-item toc-chapter" onclick="showPage(32)">
+                Задняя обложка
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Cover Page -->
+            <div class="page active" id="page-0">
+                <div class="cover-image-container">
+                    <img src="https://i.imgur.com/HXCCcqX.jpg" alt="Обложка книги - Руна и её Состояние" 
+                         onerror="this.style.display='none'; document.querySelector('.fallback-cover').style.display='block';">
+                </div>
+                
+                <!-- Fallback cover if image fails to load -->
+                <div class="fallback-cover" style="display: none;">
+                    <div class="page-header">
+                        <h1 class="page-title">РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                        <p class="page-subtitle">24 СОСТОЯНИЯ СИЛЫ</p>
+                    </div>
+                    
+                    <div class="author-info">
+                        <div style="font-size: 1.5rem; color: #ffd700; font-weight: bold; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; gap: 1rem;">
+                            <span class="diamond">◊</span>
+                            <span>STAVNIK-ODINA</span>
+                            <span class="diamond">◊</span>
+                        </div>
+                        <p style="color: #b8b8b8; font-size: 1.1rem;">Проводник рунической силы<br>
+                        Создатель системы «КОЛЧАН СИЛЫ»</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box" style="margin-top: 2rem;">
+                    <p style="text-align: center; font-size: 1.3rem; margin: 0;">
+                        Руны не диктуют — они откликаются.<br>
+                        Они не приказывают — они сопровождают.
+                    </p>
+                </div>
+                
+                <div class="page-number">Стр. 1</div>
+            </div>
+
+            <!-- Introduction Page -->
+            <div class="page" id="page-1">
+                <div class="page-header">
+                    <h1 class="page-title">ВВЕДЕНИЕ</h1>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/CwXX08S.jpg" alt="Введение - Руническая мудрость" 
+                         onerror="this.style.display='none';" style="max-height: 50vh;">
+                </div>
+                
+                <div class="content-text">
+                    <p><strong>Руны — это не приказы. Это импульсы.</strong><br>
+                    Они не диктуют, они откликаются.<br>
+                    Они не требуют, они сопровождают.</p>
+                    
+                    <p>Эта книга — не просто описание рун. Это <strong>24 внутренних входа</strong> в суть, вызов и практику силы.</p>
+                    
+                    <p>Каждая руна — как стрела. Каждое состояние — как импульс. Ты не просто читаешь — <strong>ты входишь</strong>.</p>
+                    
+                    <p>Ты держишь в руках систему, где каждая руна — это состояние, формула, союзники и активация. Ты не просто изучаешь — <strong>ты пробуждаешь</strong>.</p>
+                </div>
+                
+                <div class="quote-box">
+                    <p>Система «КОЛЧАН СИЛЫ» — это не академическое изучение древних символов. Это живая практика работы с энергетическими состояниями, где каждая руна становится ключом к определённому уровню сознания.</p>
+                </div>
+                
+                <div class="page-number">Стр. 2</div>
+            </div>
+
+            <!-- Philosophy Page -->
+            <div class="page" id="page-2">
+                <div class="page-header">
+                    <h1 class="page-title">ФИЛОСОФИЯ РУН</h1>
+                </div>
+                
+                <div class="content-text">
+                    <p>В основе системы «Колчан Силы» лежит понимание рун как <strong>живых энергетических матриц</strong>. Каждая руна — это не просто символ, а целое состояние бытия, которое можно активировать и использовать.</p>
+                    
+                    <p>Руны работают через <strong>резонанс</strong>. Они не навязывают свою волю, а откликаются на готовность практикующего войти в определённое состояние силы.</p>
+                    
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; text-align: center; margin-bottom: 1rem;">Принципы работы с рунами:</h3>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="margin-bottom: 1rem;">• <strong>Состояние важнее символа</strong> — руна активируется через внутреннее состояние</li>
+                            <li style="margin-bottom: 1rem;">• <strong>Практика важнее теории</strong> — знание приходит через опыт</li>
+                            <li style="margin-bottom: 1rem;">• <strong>Намерение важнее ритуала</strong> — чистота намерения определяет результат</li>
+                            <li style="margin-bottom: 1rem;">• <strong>Интуиция важнее правил</strong> — доверяй внутреннему знанию</li>
+                        </ul>
+                    </div>
+                    
+                    <p>24 руны Старшего Футарка в системе «КОЛЧАН СИЛЫ» представляют собой полный спектр человеческих возможностей — от материального благополучия до духовного просветления.</p>
+                </div>
+                
+                <div class="page-number">Стр. 3</div>
+            </div>
+
+            <!-- 24 States Overview -->
+            <div class="page" id="page-3">
+                <div class="page-header">
+                    <h1 class="page-title">24 СОСТОЯНИЯ СИЛЫ</h1>
+                    <p class="page-subtitle">Обзор рунической системы</p>
+                </div>
+                
+                <div class="content-text">
+                    <p>Каждая из 24 рун представляет собой уникальное <strong>состояние силы</strong> — особый способ взаимодействия с реальностью, который можно освоить и применять в жизни.</p>
+                    
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; text-align: center; margin-bottom: 1rem;">Структура каждого состояния:</h3>
+                        <p><strong>Суть</strong> — глубинное значение и энергия руны</p>
+                        <p><strong>Вызов</strong> — какие задачи решает это состояние</p>
+                        <p><strong>Практика</strong> — как войти в состояние и работать с ним</p>
+                        <p><strong>Союзники</strong> — какие силы поддерживают это состояние</p>
+                        <p><strong>Активация</strong> — конкретные техники и упражнения</p>
+                    </div>
+                    
+                    <p>Руны разделены на три атта (группы по 8 рун), каждый из которых представляет определённый уровень развития:</p>
+                    
+                    <p><strong>Первый атт (Феху — Вуньо)</strong> — материальный мир, базовые потребности, социальные связи</p>
+                    <p><strong>Второй атт (Хагалаз — Соулу)</strong> — испытания, трансформация, внутренняя работа</p>
+                    <p><strong>Третий атт (Тейваз — Дагаз)</strong> — духовное развитие, мастерство, завершение циклов</p>
+                </div>
+                
+                <div class="page-number">Стр. 4</div>
+            </div>
+
+            <!-- Individual Rune Pages -->
+            <div class="page" id="page-4">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск I — FEHU: Когда ты ищешь приток энергии и ресурсов</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/UBouUuF.jpg" alt="Руна Феху - Богатство и изобилие" 
+                         onerror="this.style.display='none'; document.querySelector('#page-4 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᚠ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты чувствуешь, что силы и ресурсы на исходе, или наоборот — готов принять новый поток. Это момент, когда важно не только получить, но и <strong>правильно направить энергию</strong>.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>FEHU (ᚠ)</strong> — руна материального и энергетического потока</p>
+                        <p>📍 <strong>изобилие</strong><br>
+                        📍 <strong>движение ресурсов</strong><br>
+                        📍 <strong>начало нового цикла</strong><br>
+                        📍 <strong>умение удерживать и приумножать</strong></p>
+                        
+                        <p><strong>Феху — это не просто богатство. Это живой поток, который требует твоего участия и ответственности.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> отметь, что сегодня приходит в твою жизнь — и в каком виде</p>
+                        <p>❗️ <strong>Активация:</strong> нанеси руну на бумагу или камень, произнеси: <strong>«Я принимаю поток. Я направляю поток. Я есмь FEHU.»</strong></p>
+                        <p><strong>Союзники:</strong> янтарь, корова/бык как символ, стихия 🔥огонь</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Феху станет твоим ключом к потоку. Не для накопления — для движения. Не для удержания — для приумножения.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 5</div>
+            </div>
+
+            <div class="page" id="page-5">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск II — URUZ: Когда ты проходишь через истощение и возвращение силы</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/yA8445F.jpg" alt="Руна Уруз - Первобытная сила" 
+                         onerror="this.style.display='none'; document.querySelector('#page-5 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᚢ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты чувствуешь, что силы на пределе, тело требует восстановления, а дух — опоры. Это момент, когда важно не сопротивляться слабости, а <strong>пройти сквозь неё</strong>, чтобы обрести новую форму.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>URUZ (ᚢ)</strong> — руна телесной силы, выносливости и перехода</p>
+                        <p>📍 <strong>стойкость</strong><br>
+                        📍 <strong>восстановление через напряжение</strong><br>
+                        📍 <strong>телесная энергия</strong><br>
+                        📍 <strong>внутренний рывок</strong></p>
+                        
+                        <p><strong>Уруз — это не агрессия. Это внутренняя мускулатура духа, которая проявляется через преодоление.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> где ты чувствуешь слабость — и что она хочет тебе показать?</p>
+                        <p>❗️ <strong>Активация:</strong> нанеси руну на запястье или на землю, произнеси: <strong>«Я есмь сила, что движет плоть. Я есмь URUZ.»</strong></p>
+                        <p><strong>Союзники:</strong> гематит, берёза, стихия 🌍 земля</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Уруз станет твоим камнем. Не для нападения — для стояния. Не для разрушения — для возрождения.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 6</div>
+            </div>
+
+            <div class="page" id="page-6">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск III — THURISAZ: Когда ты стоишь на пороге напряжения и вызова</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/1lqNct5.jpg" alt="Руна Турисаз - Сила защиты и воина" 
+                         onerror="this.style.display='none'; document.querySelector('#page-6 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᚦ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты ощущаешь внутреннее напряжение, как будто стоишь перед закрытыми вратами. Это момент, когда сила не в нападении, а в <strong>осознании порога</strong>. Турисаз — это вызов, который нельзя обойти.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>THURISAZ (ᚦ)</strong> — руна порога, напряжения и пробуждения</p>
+                        <p>📍 <strong>врата испытания</strong><br>
+                        📍 <strong>внутренний вызов</strong><br>
+                        📍 <strong>остановка перед действием</strong><br>
+                        📍 <strong>осознание силы через сопротивление</strong></p>
+                        
+                        <p><strong>Турисаз — это не агрессия. Это точка, где ты решаешь: пройти или отступить.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> что сегодня вызывает напряжение — и чему оно служит?</p>
+                        <p>❗️ <strong>Активация:</strong> нанеси руну на стекло, камень или ладонь, произнеси: <strong>«Я вижу порог. Я стою на пороге. Я есмь THURISAZ.»</strong></p>
+                        <p><strong>Союзники:</strong> обсидиан, ясень, стихия 🌬 воздух</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Турисаз станет твоим шипом. Не для нападения — для осознания. Не для разрушения — для пробуждения.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 7</div>
+            </div>
+
+            <div class="page" id="page-7">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск IV — ANSUZ: Когда ты слышишь знак, но не знаешь, откуда он</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/TGRv4VN.jpg" alt="Руна Ансуз - Мистический лес мудрости" 
+                         onerror="this.style.display='none'; document.querySelector('#page-7 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᚨ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты чувствуешь, что пространство говорит с тобой — через случайные слова, знаки, сны. Это момент, когда важно не просто слушать, а <strong>распознавать откровение</strong>. Ансуз — это голос, который звучит внутри и вокруг.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>ANSUZ (ᚨ)</strong> — руна знака, речи и откровения</p>
+                        <p>📍 <strong>внутренний голос</strong><br>
+                        📍 <strong>зов пространства</strong><br>
+                        📍 <strong>ясность мысли</strong><br>
+                        📍 <strong>откровение через слово</strong></p>
+                        
+                        <p><strong>Ансуз — это не просто речь. Это поток смысла, который требует тишины и внимания.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> что сегодня звучит особенно — и почему?</p>
+                        <p>❗️ <strong>Активация:</strong> напиши руну на бумаге, положи под язык или на горло, произнеси: <strong>«Я слышу зов. Я говорю ясно. Я есмь ANSUZ.»</strong></p>
+                        <p><strong>Союзники:</strong> лазурит, берёза, стихия 🌬 воздух</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Ансуз станет твоим голосом. Не для убеждения — для истины. Не для контроля — для откровения.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 8</div>
+            </div>
+
+            <div class="page" id="page-8">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск V — RAIDŌ: Когда ты находишь ритм движения и направления</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/bCHkU9j.jpg" alt="Руна Райдо - Мистический лесной путь" 
+                         onerror="this.style.display='none'; document.querySelector('#page-8 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᚱ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты ощущаешь, что стоишь на перепутье или уже в пути. Это момент, когда важно не просто двигаться, а <strong>понимать, куда и зачем</strong>. Райдо — это не дорога, а согласие с направлением.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>RAIDŌ (ᚱ)</strong> — руна пути, ритма и согласованного движения</p>
+                        <p>📍 <strong>направление</strong><br>
+                        📍 <strong>внутренний ритм</strong><br>
+                        📍 <strong>движение с целью</strong><br>
+                        📍 <strong>путешествие духа и тела</strong></p>
+                        
+                        <p><strong>Райдо — это не бегство. Это осознанное движение, где каждый шаг — часть формулы.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> куда ты движешься — и что ведёт тебя?</p>
+                        <p>❗️ <strong>Активация:</strong> нанеси руну на подошву обуви или на дорогу, произнеси: <strong>«Я в пути. Я в ритме. Я есмь RAIDŌ.»</strong></p>
+                        <p><strong>Союзники:</strong> яшма, дуб, стихия 🔥 огонь</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Райдо станет твоим колесом. Не для бегства — для движения. Не для спешки — для ритма.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 9</div>
+            </div>
+
+            <div class="page" id="page-9">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск VI — KENAZ: Когда ты раскрываешь внутренний свет и суть</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/g3osTwq.jpg" alt="Руна Кеназ - Космический огонь знания" 
+                         onerror="this.style.display='none'; document.querySelector('#page-9 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᚲ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты ощущаешь, что внутри тебя есть нечто важное, но оно скрыто. Это момент, когда нужно не искать вовне, а <strong>зажечь факел внутри</strong>. Кеназ — это свет, который не освещает путь, а раскрывает суть.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>KENAZ (ᚲ)</strong> — руна внутреннего огня, раскрытия и ясности</p>
+                        <p>📍 <strong>озарение</strong><br>
+                        📍 <strong>раскрытие потенциала</strong><br>
+                        📍 <strong>внутренний свет</strong><br>
+                        📍 <strong>трансформация через осознание</strong></p>
+                        
+                        <p><strong>Кеназ — это не вспышка. Это устойчивое пламя, которое горит внутри, освещая то, что ты готов увидеть.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> что внутри тебя требует света — но ты избегал смотреть?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на свече, лампе или на груди, произнеси: <strong>«Я зажигаю свет. Я раскрываю суть. Я есмь KENAZ.»</strong></p>
+                        <p><strong>Союзники:</strong> гранат, бук, стихия 🔥 огонь</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Кеназ станет твоим факелом. Не для пути — для истины. Не для движения — для раскрытия.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 10</div>
+            </div>
+
+            <div class="page" id="page-10">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск VII — GEBO: Когда ты входишь в союз и дар без условий</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/9TsBbhF.jpg" alt="Руна Гебо - Космическая энергия взаимного обмена" 
+                         onerror="this.style.display='none'; document.querySelector('#page-10 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᚷ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты чувствуешь, что готов к обмену, но не хочешь терять себя. Это момент, когда важно не торговаться, а <strong>дарить</strong>. Гебо — это союз, который строится на свободе, а не на зависимости.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>GEBO (ᚷ)</strong> — руна дара, союза и баланса</p>
+                        <p>📍 <strong>взаимный обмен</strong><br>
+                        📍 <strong>союз без контроля</strong><br>
+                        📍 <strong>дар без условий</strong><br>
+                        📍 <strong>равновесие между «я» и «ты»</strong></p>
+                        
+                        <p><strong>Гебо — это не сделка. Это точка, где ты даёшь, потому что хочешь, а не потому что должен.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> что ты готов отдать — без ожидания возврата?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на ладони или на символе союза, произнеси: <strong>«Я даю. Я принимаю. Я есмь GEBO.»</strong></p>
+                        <p><strong>Союзники:</strong> розовый кварц, вяз, стихия 🌬 воздух</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Гебо станет твоим узлом. Не для контроля — для союза. Не для сделки — для дара.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 11</div>
+            </div>
+
+            <div class="page" id="page-11">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск VIII — WUNJO: Когда ты входишь в согласие с радостью</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/oUD8o7y.jpg" alt="Руна Вуньо - Космическая радость и гармония" 
+                         onerror="this.style.display='none'; document.querySelector('#page-11 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᚹ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты чувствуешь, что радость где-то рядом, но не внутри. Это момент, когда важно не искать повод, а <strong>позволить себе быть в согласии</strong>. Вуньо — это не всплеск эмоций, а глубокое внутреннее «да».</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>WUNJO (ᚹ)</strong> — руна радости, согласия и внутреннего света</p>
+                        <p>📍 <strong>гармония</strong><br>
+                        📍 <strong>внутреннее согласие</strong><br>
+                        📍 <strong>радость без причины</strong><br>
+                        📍 <strong>свет, исходящий изнутри</strong></p>
+                        
+                        <p><strong>Вуньо — это не веселье. Это состояние, в котором ты не сопротивляешься свету.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> где ты не позволяешь себе радость — и почему?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на груди или на зеркале, произнеси: <strong>«Я принимаю радость. Я есмь WUNJO.»</strong></p>
+                        <p><strong>Союзники:</strong> цитрин, липа, стихия 🔥 огонь</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Вуньо станет твоим внутренним светом. Не для показности — для согласия. Не для всплеска — для потока.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 12</div>
+            </div>
+
+            <!-- Second Aett Introduction -->
+            <div class="page" id="page-12">
+                <div class="page-header">
+                    <h1 class="page-title">ВТОРОЙ АТТ</h1>
+                    <p class="page-subtitle">Силы трансформации и испытаний</p>
+                </div>
+                
+                <div class="content-text">
+                    <p>Первый атт завершён. Ты освоил базовые состояния материального мира. Теперь начинается <strong>второй атт</strong> — путь через испытания к трансформации.</p>
+                    
+                    <p>Если первый атт учил жить в мире, то второй атт учит <strong>изменять мир и себя</strong>. Здесь ты встретишься с силами разрушения и созидания, застоя и движения, тайны и откровения.</p>
+                    
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; text-align: center; margin-bottom: 1rem;">Руны второго атта:</h3>
+                        <p><strong>Хагалаз</strong> — разрушение старого</p>
+                        <p><strong>Наутиз</strong> — нужда как учитель</p>
+                        <p><strong>Иса</strong> — остановка и концентрация</p>
+                        <p><strong>Йера</strong> — циклы и урожай</p>
+                        <p><strong>Эйваз</strong> — стойкость и защита</p>
+                        <p><strong>Перт</strong> — тайные знания</p>
+                        <p><strong>Альгиз</strong> — божественная защита</p>
+                        <p><strong>Соулу</strong> — солнечная сила</p>
+                    </div>
+                    
+                    <p>Второй атт — это <strong>алхимическая лаборатория души</strong>. Здесь ты научишься превращать свинец проблем в золото мудрости.</p>
+                </div>
+                
+                <div class="quote-box">
+                    <p>"Истинная сила рождается не в комфорте, а в преодолении. Второй атт — это кузница характера."</p>
+                </div>
+                
+                <div class="page-number">Стр. 13</div>
+            </div>
+
+            <!-- Hagalaz -->
+            <div class="page" id="page-13">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск IX — HAGALAZ: Когда ты входишь в разрушение ради освобождения</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/eyOhq9b.jpg" alt="Руна Хагалаз - Разрушительная сила града" 
+                         onerror="this.style.display='none'; document.querySelector('#page-13 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᚺ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты ощущаешь, что всё рушится — внутри или вокруг. Это момент, когда важно не сопротивляться буре, а <strong>пройти сквозь неё</strong>. Хагалаз — это не катастрофа, а освобождение от ненужного.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>HAGALAZ (ᚺ)</strong> — руна разрушения, очищения и стихийной силы</p>
+                        <p>📍 <strong>шторм</strong><br>
+                        📍 <strong>разрушение формы</strong><br>
+                        📍 <strong>очищение через хаос</strong><br>
+                        📍 <strong>внутренний взрыв</strong></p>
+                        
+                        <p><strong>Хагалаз — это не конец. Это точка, где старая форма больше не удерживает суть.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> что должно быть разрушено — чтобы ты стал собой?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на земле, камне или в воде, произнеси: <strong>«Я принимаю разрушение как путь. Я есмь HAGALAZ.»</strong></p>
+                        <p><strong>Союзники:</strong> обсидиан, ясень, стихия 🌊 вода + 🌬 воздух</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Хагалаз станет твоим штормом. Не для разрушения — для освобождения. Не для страха — для силы.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 14</div>
+            </div>
+
+            <!-- Nauthiz -->
+            <div class="page" id="page-14">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск X — NAUTHIZ: Когда ты сталкиваешься с ограничением, которое ведёт к силе</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/fWLXJ8S.jpg" alt="Руна Наутиз - Сила необходимости" 
+                         onerror="this.style.display='none'; document.querySelector('#page-14 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᚾ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты чувствуешь, что что-то сдерживает тебя — обстоятельства, страх, нехватка. Это момент, когда важно не бороться с ограничением, а <strong>понять его суть</strong>. Наутиз — это не преграда, а точка внутреннего напряжения, из которой рождается воля.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>NAUTHIZ (ᚾ)</strong> — руна необходимости, внутреннего напряжения и воли</p>
+                        <p>📍 <strong>ограничение</strong><br>
+                        📍 <strong>внутренний узел</strong><br>
+                        📍 <strong>воля к преодолению</strong><br>
+                        📍 <strong>рост через сжатие</strong></p>
+                        
+                        <p><strong>Наутиз — это не наказание. Это вызов, который формирует твою силу.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> что сегодня кажется сдерживающим — и чему оно служит?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на запястье или на камне, произнеси: <strong>«Я принимаю необходимость. Я есмь NAUTHIZ.»</strong></p>
+                        <p><strong>Союзники:</strong> чёрный турмалин, ольха, стихия 🌍 земля</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Наутиз станет твоим узлом. Не для страха — для воли. Не для сдерживания — для роста.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 15</div>
+            </div>
+
+            <!-- Isa -->
+            <div class="page" id="page-15">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск XI — ISSA: Когда ты входишь в остановку и кристаллизацию</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/xUT835m.png" alt="Руна Исса - Кристальная сила льда" 
+                         onerror="this.style.display='none'; document.querySelector('#page-15 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᛁ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты ощущаешь, что всё замерло — внутри и вокруг. Это момент, когда важно не толкать движение, а <strong>принять паузу</strong>. Исса — это не застой, а кристалл, в котором зреет ясность.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>ISSA (ᛁ)</strong> — руна остановки, заморозки и внутренней ясности</p>
+                        <p>📍 <strong>пауза</strong><br>
+                        📍 <strong>кристаллизация</strong><br>
+                        📍 <strong>временное замедление</strong><br>
+                        📍 <strong>внутреннее спокойствие</strong></p>
+                        
+                        <p><strong>Исса — это не конец. Это точка, где ты перестаёшь бежать и начинаешь видеть.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> где ты пытаешься ускорить — но пространство требует остановки?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на стекле, льду или на лбу, произнеси: <strong>«Я принимаю остановку. Я есмь ISSA.»</strong></p>
+                        <p><strong>Союзники:</strong> горный хрусталь, ива, стихия ❄️ лёд (вода в покое)</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Исса станет твоим кристаллом. Не для заморозки — для ясности. Не для бегства — для покоя.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 16</div>
+            </div>
+
+            <!-- Jera -->
+            <div class="page" id="page-16">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск XII — JERA: Когда ты входишь в цикл зрелости и урожая</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/FXjnunN.jpg" alt="Руна Йера - Циклы урожая" 
+                         onerror="this.style.display='none'; document.querySelector('#page-16 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᛃ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты ощущаешь, что что-то созревает — медленно, но верно. Это момент, когда важно не торопить, а <strong>довериться ритму</strong>. Йера — это не результат, а зрелость, которая приходит в своё время.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>JERA (ᛃ)</strong> — руна цикла, урожая и естественного хода</p>
+                        <p>📍 <strong>созревание</strong><br>
+                        📍 <strong>естественный ритм</strong><br>
+                        📍 <strong>плод усилий</strong><br>
+                        📍 <strong>время жатвы</strong></p>
+                        
+                        <p><strong>Йера — это не награда. Это отражение того, что ты посеял.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> что в тебе уже зреет — но ты не замечаешь?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на плоде, земле или в дневнике, произнеси: <strong>«Я принимаю цикл. Я есмь JERA.»</strong></p>
+                        <p><strong>Союзники:</strong> агат, рожь, стихия 🌍 земля</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Йера станет твоим кругом. Не для спешки — для зрелости. Не для контроля — для естественности.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 17</div>
+            </div>
+
+            <!-- Eihwaz -->
+            <div class="page" id="page-17">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск XIII — EIHWAZ: Когда ты входишь в стойкость и вертикаль духа</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/J73puYW.jpg" alt="Руна Эйваз - Мировое древо" 
+                         onerror="this.style.display='none'; document.querySelector('#page-17 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᛇ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты чувствуешь, что пространство требует от тебя не движения, а устойчивости. Это момент, когда важно не гнуться, а <strong>вырасти вверх — как ясень</strong>. Эйваз — это не защита, а внутренняя ось.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>EIHWAZ (ᛇ)</strong> — руна вертикали, стойкости и духовной оси</p>
+                        <p>📍 <strong>внутренний стержень</strong><br>
+                        📍 <strong>духовная устойчивость</strong><br>
+                        📍 <strong>осознание пути</strong><br>
+                        📍 <strong>связь между мирами</strong></p>
+                        
+                        <p><strong>Эйваз — это не броня. Это ясень, который соединяет корни и небо.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> где ты теряешь вертикаль — и как её восстановить?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на позвоночнике, дереве или амулете, произнеси: <strong>«Я стою. Я соединяю. Я есмь EIHWAZ.»</strong></p>
+                        <p><strong>Союзники:</strong> турмалин, ясень, стихия 🌲 дерево (земля + воздух)</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Эйваз станет твоим древом. Не для защиты — для соединения. Не для силы — для стойкости.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 18</div>
+            </div>
+
+            <!-- Perth -->
+            <div class="page" id="page-18">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск XIV — PERTHRO: Когда ты входишь в тайну, которая хочет быть раскрыта</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/P6m7O2V.jpg" alt="Руна Пертро - Тайные знания" 
+                         onerror="this.style.display='none'; document.querySelector('#page-18 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᛈ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты ощущаешь, что не всё подвластно контролю. Это момент, когда важно не знать, а <strong>довериться</strong>. Пертро — это не случайность, а скрытая закономерность, которая проявляется, когда ты готов.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>PERTHRO (ᛈ)</strong> — руна тайны, судьбы и раскрытия</p>
+                        <p>📍 <strong>неизвестность</strong><br>
+                        📍 <strong>внутренний жребий</strong><br>
+                        📍 <strong>раскрытие скрытого</strong><br>
+                        📍 <strong>доверие потоку</strong></p>
+                        
+                        <p><strong>Пертро — это не игра. Это сакральная случайность, в которой есть смысл.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> что сегодня кажется случайным — но несёт знак?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на мешочке, книге или на ладони, произнеси: <strong>«Я принимаю тайну. Я есмь PERTHRO.»</strong></p>
+                        <p><strong>Союзники:</strong> лунный камень, орешник, стихия 🌊 вода</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Пертро станет твоим жребием. Не для контроля — для доверия. Не для страха — для раскрытия.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 19</div>
+            </div>
+
+            <!-- Algiz -->
+            <div class="page" id="page-19">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск XV — ALGIZ: Когда ты входишь в защиту, исходящую из духа</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/1XNEMgW.jpg" alt="Руна Альгиз - Божественная защита" 
+                         onerror="this.style.display='none'; document.querySelector('#page-19 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᛉ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты чувствуешь, что пространство требует защиты. Это момент, когда важно не закрываться, а <strong>раскрыться в силе</strong>. Альгиз — это не щит, а состояние связи с высшим.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>ALGIZ (ᛉ)</strong> — руна защиты, связи и духовной опоры</p>
+                        <p>📍 <strong>духовная защита</strong><br>
+                        📍 <strong>интуитивная сила</strong><br>
+                        📍 <strong>связь с высшим</strong><br>
+                        📍 <strong>раскрытие в доверии</strong></p>
+                        
+                        <p><strong>Альгиз — это не броня. Это состояние, в котором ты стоишь в потоке и не боишься.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> где ты чувствуешь угрозу — и как ты можешь раскрыться вместо закрытия?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на лбу, зеркале или на входе, произнеси: <strong>«Я раскрыт и защищён. Я есмь ALGIZ.»</strong></p>
+                        <p><strong>Союзники:</strong> аметист, лось/олень, стихия 🌬 воздух + 🌲 лес</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Альгиз станет твоим знаком. Не для страха — для связи. Не для закрытия — для раскрытия.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 20</div>
+            </div>
+
+            <!-- Sowilo -->
+            <div class="page" id="page-20">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск XVI — SOWILO: Когда ты входишь в ясность, победу и солнечную силу</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/YaveGsx.jpg" alt="Руна Совило - Солнечная сила" 
+                         onerror="this.style.display='none'; document.querySelector('#page-20 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᛋ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты ощущаешь, что внутри тебя пробуждается свет, но он ещё не оформлен. Это момент, когда важно не просто сиять, а <strong>направить свет как силу</strong>. Совило — это не просто солнце, это победа, которая приходит изнутри.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>SOWILO (ᛋ)</strong> — руна солнечной силы, ясности и победы</p>
+                        <p>📍 <strong>внутреннее солнце</strong><br>
+                        📍 <strong>ясность намерения</strong><br>
+                        📍 <strong>победа духа</strong><br>
+                        📍 <strong>движение к цели</strong></p>
+                        
+                        <p><strong>Совило — это не триумф над другими. Это согласие с собой, в котором ты становишься источником света.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> где ты уже сияешь — но не признаёшь это?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на зеркале, груди или амулете, произнеси: <strong>«Я сияю. Я побеждаю. Я есмь SOWILO.»</strong></p>
+                        <p><strong>Союзники:</strong> солнечный камень, лавр, стихия ☀️ огонь</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Совило станет твоим солнцем. Не для славы — для ясности. Не для борьбы — для сияния.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 21</div>
+            </div>
+
+            <!-- Third Aett Introduction -->
+            <div class="page" id="page-21">
+                <div class="page-header">
+                    <h1 class="page-title">ТРЕТИЙ АТТ</h1>
+                    <p class="page-subtitle">Мастерство и завершение</p>
+                </div>
+                
+                <div class="content-text">
+                    <p>Второй атт пройден. Ты прошёл через испытания и трансформации. Теперь начинается <strong>третий атт</strong> — путь мастерства и духовного завершения.</p>
+                    
+                    <p>Если первый атт учил жить, а второй — изменяться, то третий атт учит <strong>мастерски управлять реальностью</strong> и завершать великие циклы развития.</p>
+                    
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; text-align: center; margin-bottom: 1rem;">Руны третьего атта:</h3>
+                        <p><strong>Тейваз</strong> — воинское мастерство</p>
+                        <p><strong>Беркана</strong> — материнская сила</p>
+                        <p><strong>Эваз</strong> — движение и прогресс</p>
+                        <p><strong>Манназ</strong> — человеческое совершенство</p>
+                        <p><strong>Лагуз</strong> — поток интуиции</p>
+                        <p><strong>Ингуз</strong> — плодородие и потенциал</p>
+                        <p><strong>Одал</strong> — наследие и традиция</p>
+                        <p><strong>Дагаз</strong> — рассвет нового дня</p>
+                    </div>
+                    
+                    <p>Третий атт — это <strong>университет души</strong>. Здесь ты становишься мастером, способным не только изменять себя, но и влиять на мир.</p>
+                </div>
+                
+                <div class="quote-box">
+                    <p>"Мастерство — это не конец пути, а начало служения. Третий атт учит быть мостом между мирами."</p>
+                </div>
+                
+                <div class="page-number">Стр. 22</div>
+            </div>
+
+            <!-- Tiwaz -->
+            <div class="page" id="page-22">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск XVII — TIWAZ: Когда ты входишь в волю, честь и направление духа</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/ILslDsW.jpg" alt="Руна Тейваз - Воинская доблесть" 
+                         onerror="this.style.display='none'; document.querySelector('#page-22 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᛏ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты чувствуешь, что пришло время действовать — не из эмоций, а из чести. Это момент, когда важно не просто идти, а <strong>стоять за то, что важно</strong>. Тейваз — это не оружие, это воля, направленная вверх.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>TIWAZ (ᛏ)</strong> — руна воли, чести и духовного направления</p>
+                        <p>📍 <strong>воля к действию</strong><br>
+                        📍 <strong>честь и принцип</strong><br>
+                        📍 <strong>направление духа</strong><br>
+                        📍 <strong>жертва ради высшего</strong></p>
+                        
+                        <p><strong>Тейваз — это не агрессия. Это внутренняя вертикаль, которая ведёт тебя сквозь сомнения.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> за что ты готов стоять — даже если это трудно?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на груди, мече или знаке силы, произнеси: <strong>«Я стою. Я действую. Я есмь TIWAZ.»</strong></p>
+                        <p><strong>Союзники:</strong> рубин, ясень, стихия 🔥 огонь + 🌬 воздух</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Тейваз станет твоим копьём. Не для нападения — для направления. Не для власти — для чести.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 23</div>
+            </div>
+
+            <!-- Berkano -->
+            <div class="page" id="page-23">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск XVIII — BERKANO: Когда ты входишь в заботу, рост и женскую силу</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/RkavIg0.jpg" alt="Руна Беркана - Материнская сила" 
+                         onerror="this.style.display='none'; document.querySelector('#page-23 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᛒ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты ощущаешь, что что-то нуждается в твоей заботе — идея, человек, ты сам. Это момент, когда важно не толкать, а <strong>оберегать</strong>. Беркана — это не слабость, а сила роста через мягкость.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>BERKANO (ᛒ)</strong> — руна заботы, роста и женской энергии</p>
+                        <p>📍 <strong>начало жизни</strong><br>
+                        📍 <strong>забота и защита</strong><br>
+                        📍 <strong>рост через мягкость</strong><br>
+                        📍 <strong>женская сила</strong></p>
+                        
+                        <p><strong>Беркана — это не покой. Это активная забота, в которой раскрывается новое.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> что сегодня нуждается в твоей заботе — и как ты можешь это дать?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на теле, растении или в дневнике, произнеси: <strong>«Я заботлива. Я расту. Я есмь BERKANO.»</strong></p>
+                        <p><strong>Союзники:</strong> нефрит, берёза, стихия 🌱 земля + 🌊 вода</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Беркана станет твоим ростком. Не для контроля — для заботы. Не для силы — для раскрытия.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 24</div>
+            </div>
+
+            <!-- Ehwaz -->
+            <div class="page" id="page-24">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск XIX — EWAZ: Когда ты входишь в доверие к движению и союзнику</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/AH4iiQ3.jpg" alt="Руна Эваз - Движение и прогресс" 
+                         onerror="this.style.display='none'; document.querySelector('#page-24 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᛖ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты чувствуешь, что движение возможно — но не в одиночку. Это момент, когда важно не просто идти, а <strong>идти вместе</strong>. Эваз — это не скорость, а согласованность.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>EWAZ (ᛖ)</strong> — руна движения, доверия и союзничества</p>
+                        <p>📍 <strong>движение в согласии</strong><br>
+                        📍 <strong>доверие к партнёру</strong><br>
+                        📍 <strong>синхронность</strong><br>
+                        📍 <strong>внутренний и внешний союз</strong></p>
+                        
+                        <p><strong>Эваз — это не скачок. Это ритм, в котором ты не один.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> кто или что движется рядом с тобой — и как ты взаимодействуешь?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на амулете, транспортном средстве или на ладони, произнеси: <strong>«Я двигаюсь в согласии. Я есмь EWAZ.»</strong></p>
+                        <p><strong>Союзники:</strong> лунный камень, конь, стихия 🌬 воздух + 🔥 огонь</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Эваз станет твоим ритмом. Не для одиночества — для согласия. Не для скорости — для доверия.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 25</div>
+            </div>
+
+            <!-- Mannaz -->
+            <div class="page" id="page-25">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск XX — MANNAZ: Когда ты входишь в осознание себя как части рода и системы</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/ki5Kkyu.jpg" alt="Руна Манназ - Человеческое совершенство" 
+                         onerror="this.style.display='none'; document.querySelector('#page-25 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᛗ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты ощущаешь, что твоя сила — не только личная. Это момент, когда важно увидеть себя как часть большего: рода, сообщества, человечества. Манназ — это не «я», это «мы», в котором раскрывается личная суть.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>MANNAZ (ᛗ)</strong> — руна человека, рода и сознания</p>
+                        <p>📍 <strong>осознание себя</strong><br>
+                        📍 <strong>взаимосвязь с другими</strong><br>
+                        📍 <strong>родовая сила</strong><br>
+                        📍 <strong>разум и структура</strong></p>
+                        
+                        <p><strong>Манназ — это не толпа. Это ясное «я» внутри общего «мы».</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> как ты проявляешь себя в системе — и что она отражает тебе?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на лбу, зеркале или в круге, произнеси: <strong>«Я есмь человек. Я есмь часть. Я есмь MANNAZ.»</strong></p>
+                        <p><strong>Союзники:</strong> флюорит, бук, стихия 🌬 воздух</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Манназ станет твоим зеркалом. Не для растворения — для осознания. Не для одиночества — для связи.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 26</div>
+            </div>
+
+            <!-- Laguz -->
+            <div class="page" id="page-26">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск XXI — LAGUZ: Когда ты входишь в поток, интуицию и глубину</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/VEE6qfv.jpg" alt="Руна Лагуз - Поток интуиции" 
+                         onerror="this.style.display='none'; document.querySelector('#page-26 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᛚ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты ощущаешь, что логика не даёт ответа. Это момент, когда важно отпустить контроль и войти в поток. Лагуз — это не хаос, это мудрая вода, которая знает путь.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>LAGUZ (ᛚ)</strong> — руна интуиции, потока и глубинной мудрости</p>
+                        <p>📍 <strong>интуиция</strong><br>
+                        📍 <strong>текучесть</strong><br>
+                        📍 <strong>глубина чувств</strong><br>
+                        📍 <strong>движение по внутреннему течению</strong></p>
+                        
+                        <p><strong>Лагуз — это не слабость. Это сила воды, которая обходит преграды и проникает в суть.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> где ты сопротивляешься течению — и что произойдёт, если отпустить?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на воде, коже или в дневнике, произнеси: <strong>«Я в потоке. Я доверяю. Я есмь LAGUZ.»</strong></p>
+                        <p><strong>Союзники:</strong> аквамарин, ива, стихия 🌊 вода</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Лагуз станет твоей рекой. Не для контроля — для доверия. Не для логики — для глубины.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 27</div>
+            </div>
+
+            <!-- Ingwaz -->
+            <div class="page" id="page-27">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск XXII — INGWAZ: Когда ты входишь в созревание, завершение и внутреннюю цельность</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/1LTRDCW.jpg" alt="Руна Ингуз - Плодородие и потенциал" 
+                         onerror="this.style.display='none'; document.querySelector('#page-27 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᛝ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты ощущаешь, что внутри тебя что-то завершилось — но ещё не проявилось. Это момент, когда важно не торопить раскрытие, а позволить ему дозреть. Ингваз — это не действие, а завершённая форма, готовая к проявлению.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>INGWAZ (ᛝ)</strong> — руна завершения, внутренней цельности и плодородия</p>
+                        <p>📍 <strong>внутреннее завершение</strong><br>
+                        📍 <strong>созревание</strong><br>
+                        📍 <strong>готовность к проявлению</strong><br>
+                        📍 <strong>сила покоя</strong></p>
+                        
+                        <p><strong>Ингваз — это не пауза. Это точка, где всё уже готово — и ждёт своего часа.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> что в тебе уже завершено — но ты не признаёшь?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на земле, семени или в дневнике, произнеси: <strong>«Я завершён. Я готов. Я есмь INGWAZ.»</strong></p>
+                        <p><strong>Союзники:</strong> яшма, зерно, стихия 🌍 земля</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Ингваз станет твоим зерном. Не для спешки — для зрелости. Не для действия — для готовности.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 28</div>
+            </div>
+
+            <!-- Othala -->
+            <div class="page" id="page-28">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск XXIII — OTHALA: Когда ты входишь в наследие, границы и сакральную принадлежность</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/OOkUIGv.jpg" alt="Руна Отал - Наследие и сакральная принадлежность" 
+                         onerror="this.style.display='none'; document.querySelector('#page-28 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᛟ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты ощущаешь, что пришло время вспомнить, откуда ты. Это момент, когда важно не просто двигаться вперёд, а <strong>утвердиться в корнях</strong>. Отал — это не ограничение, это твоя территория силы.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>OTHALA (ᛟ)</strong> — руна наследия, границ и сакральной принадлежности</p>
+                        <p>📍 <strong>родовое пространство</strong><br>
+                        📍 <strong>наследие</strong><br>
+                        📍 <strong>границы и структура</strong><br>
+                        📍 <strong>сила принадлежности</strong></p>
+                        
+                        <p><strong>Отал — это не замкнутость. Это ясное «моё», в котором ты стоишь твёрдо.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> что ты считаешь своим — и как ты это защищаешь?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на двери, земле или амулете, произнеси: <strong>«Я принадлежу. Я охраняю. Я есмь OTHALA.»</strong></p>
+                        <p><strong>Союзники:</strong> гагат, дуб, стихия 🌍 земля</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Отал станет твоим домом. Не для замыкания — для утверждения. Не для изоляции — для силы рода.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 29</div>
+            </div>
+
+            <!-- Dagaz -->
+            <div class="page" id="page-29">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                    <p class="page-subtitle">Выпуск XXIV — DAGAZ: Когда ты входишь в переход, пробуждение и точку трансформации</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/HTtJvzB.jpg" alt="Руна Дагаз - Рассвет нового дня" 
+                         onerror="this.style.display='none'; document.querySelector('#page-29 .rune-display').style.display='block';" style="max-height: 40vh;">
+                </div>
+                
+                <div class="rune-display" style="display: none;">
+                    <span class="rune-symbol-large">ᛞ</span>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔰 СОСТОЯНИЕ</h3>
+                        <p>Ты ощущаешь, что всё меняется — но не знаешь, как. Это момент, когда важно не бояться перехода, а <strong>стать его частью</strong>. Дагаз — это не момент, это врата между состояниями.</p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🕯 РУНА</h3>
+                        <p><strong>DAGAZ (ᛞ)</strong> — руна перехода, пробуждения и трансформации</p>
+                        <p>📍 <strong>врата</strong><br>
+                        📍 <strong>точка перехода</strong><br>
+                        📍 <strong>пробуждение</strong><br>
+                        📍 <strong>трансформация</strong></p>
+                        
+                        <p><strong>Дагаз — это не конец и не начало. Это вспышка, в которой ты становишься новым.</strong></p>
+                        
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 ВЗАИМОДЕЙСТВИЕ</h3>
+                        <p>🖍 <strong>Наблюдение:</strong> что сегодня меняется — и как ты можешь пройти сквозь это?</p>
+                        <p>❗️ <strong>Активация:</strong> нарисуй руну на зеркале, пороге или в дневнике, произнеси: <strong>«Я прохожу. Я пробуждаюсь. Я есмь DAGAZ.»</strong></p>
+                        <p><strong>Союзники:</strong> цитрин, рассвет, стихия ☀️ свет (огонь + воздух)</p>
+                    </div>
+                </div>
+                
+                <div class="quote-box">
+                    <p style="font-size: 1.2rem; text-align: center;"><strong>📜 ФОРМУЛА ДНЯ:</strong><br>
+                    ⚠️ «Пусть Дагаз станет твоими вратами. Не для страха — для перехода. Не для прошлого — для пробуждения.»</p>
+                </div>
+                
+                <div class="page-number">Стр. 30</div>
+            </div>
+
+            <!-- Completion Map Page -->
+            <div class="page" id="page-30">
+                <div class="page-header">
+                    <h1 class="page-title">КАРТА ЗАВЕРШЕНИЯ</h1>
+                    <p class="page-subtitle">Визуальное путешествие через 24 состояния</p>
+                </div>
+                
+                <div class="cover-image-container" style="margin-bottom: 2rem;">
+                    <img src="https://i.imgur.com/gq8b5xn.jpg" alt="Карта завершения - Полный путь через 24 руны" 
+                         onerror="this.style.display='none';" style="max-height: 70vh;">
+                </div>
+                
+                <div class="content-text">
+                    <p>Перед тобой — <strong>карта твоего путешествия</strong>. Каждая руна, каждое состояние, каждый этап развития отражён в этой священной схеме.</p>
+                    
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; text-align: center; margin-bottom: 1rem;">Что показывает карта:</h3>
+                        <p>• <strong>Спираль развития</strong> — от материального к духовному</p>
+                        <p>• <strong>Три атта</strong> — три уровня посвящения</p>
+                        <p>• <strong>Взаимосвязи</strong> — как руны влияют друг на друга</p>
+                        <p>• <strong>Центр силы</strong> — точка интеграции всех состояний</p>
+                    </div>
+                    
+                    <p>Эта карта — не просто схема. Это <strong>живой инструмент</strong> для работы с рунической силой. Медитируй на неё, изучай связи, находи свой путь через лабиринт состояний.</p>
+                    
+                    <p>Каждый раз, возвращаясь к этой карте, ты будешь видеть новые детали, новые связи, новые возможности. Она растёт вместе с твоим пониманием.</p>
+                </div>
+                
+                <div class="quote-box">
+                    <p>"Карта — это не территория, но хорошая карта показывает все пути к сокровищу."</p>
+                </div>
+                
+                <div class="page-number">Стр. 31</div>
+            </div>
+
+            <!-- Conclusion Page -->
+            <div class="page" id="page-31">
+                <div class="page-header">
+                    <h1 class="page-title">🟢 ЗАВЕРШЕНИЕ СЕРИИ</h1>
+                    <p class="page-subtitle">РУНА И ЕЁ СОСТОЯНИЕ: 24 состояния силы</p>
+                </div>
+                
+                <div class="content-text">
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🔮 Что мы сделали</h3>
+                        <p>Мы прошли через 24 руны Старшего Футарка — не как символы, а как состояния. Каждая руна раскрыта как точка входа в энергию, как импульс, как внутренний вызов. Ты не просто читаешь — ты входишь, активируешь, проживаешь.</p>
+                    </div>
+                    
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">📜 Структура серии</h3>
+                        <p>• <strong>Сакральное состояние</strong><br>
+                        • <strong>Импульс руны</strong><br>
+                        • <strong>Формула дня</strong> — как мантра, как настрой<br>
+                        • <strong>Активация</strong> — ритуальное действие<br>
+                        • <strong>Союзники</strong> — камни, деревья, стихии<br>
+                        • <strong>Взаимодействие</strong> — точка наблюдения и осознания</p>
+                    </div>
+                    
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🧭 Зачем это нужно</h3>
+                        <p>Эта книга — не учебник. Это путеводитель по внутренним мирам, по точкам силы, по состояниям, которые формируют путь. Каждая руна — это не просто знание. Это опыт, который можно прожить, активировать, встроить.</p>
+                    </div>
+                    
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">⚔️ Что ты получаешь</h3>
+                        <p>• <strong>Ясную структуру</strong> для работы с рунами<br>
+                        • <strong>Энергетическую карту</strong> состояний<br>
+                        • <strong>Основание</strong> для ритуалов, практик, визуальных карт<br>
+                        • <strong>Язык</strong>, через который можно говорить с силой</p>
+                    </div>
+                    
+                    <div class="rune-meaning-box">
+                        <h3 style="color: #ffd700; margin-bottom: 1rem;">🌿 Что дальше</h3>
+                        <p>Эта серия завершена. Но она — основа для:<br>
+                        • <strong>визуализации</strong><br>
+                        • <strong>«Колчана Силы»</strong><br>
+                        • <strong>ранговых карт</strong><br>
+                        • <strong>сакральных маршрутов</strong><br>
+                        • <strong>закрытого общества</strong></p>
+                        
+                        <p style="margin-top: 1rem;">Ты можешь строить на ней — как архитектор системы, как мастер рун, как проводник.</p>
+                    </div>
+                </div>
+                
+                <div class="author-info">
+                    <div style="font-size: 1.3rem; color: #ffd700; font-weight: bold; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; gap: 1rem;">
+                        <span class="diamond">⟡</span>
+                        <span>STAVNIK-ODINA</span>
+                        <span class="diamond">⟡</span>
+                    </div>
+                    <p style="color: #b8b8b8; text-align: center;">Создатель сакральной системы • Архитектор силы • Проводник через руны</p>
+                </div>
+                
+                <div class="page-number">Стр. 32</div>
+            </div>
+
+            <!-- Back Cover Page -->
+            <div class="page" id="page-32">
+                <div class="cover-image-container">
+                    <img src="https://i.imgur.com/GB0zcEj.jpg" alt="Задняя обложка книги - Руна и её Состояние" 
+                         onerror="this.style.display='none'; document.querySelector('#page-32 .fallback-back-cover').style.display='block';" style="max-height: 90vh;">
+                </div>
+                
+                <!-- Fallback back cover if image fails to load -->
+                <div class="fallback-back-cover" style="display: none;">
+                    <div class="page-header">
+                        <h1 class="page-title" style="font-size: 2rem;">РУНА И ЕЁ СОСТОЯНИЕ</h1>
+                        <p class="page-subtitle">24 состояния силы освоены</p>
+                    </div>
+                    
+                    <div class="content-text" style="text-align: center;">
+                        <div class="rune-meaning-box">
+                            <p style="font-size: 1.2rem; margin-bottom: 2rem;">
+                                "Руны не диктуют — они откликаются.<br>
+                                Они не приказывают — они сопровождают."
+                            </p>
+                            
+                            <p style="color: #c9c9c9;">
+                                Система «КОЛЧАН СИЛЫ» — это живая практика работы<br>
+                                с энергетическими состояниями, где каждая руна<br>
+                                становится ключом к определённому уровню сознания.
+                            </p>
+                        </div>
+                        
+                        <div style="margin-top: 3rem;">
+                            <div style="font-size: 1.3rem; color: #ffd700; font-weight: bold; margin-bottom: 0.5rem;">
+                                STAVNIK-ODINA
+                            </div>
+                            <p style="color: #b8b8b8;">Проводник рунической силы</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="page-number">Стр. 33</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="nav-controls">
+        <button class="nav-btn" id="prevBtn" onclick="previousPage()">← Назад</button>
+        <button class="nav-btn" id="nextBtn" onclick="nextPage()">Вперёд →</button>
+    </div>
+
+    <script>
+        let currentPage = 0;
+        const totalPages = 33;
+
+        function showPage(pageIndex) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(`page-${pageIndex}`).classList.add('active');
+            
+            // Update navigation
+            updateNavigation(pageIndex);
+            
+            // Update table of contents
+            updateTOC(pageIndex);
+            
+            // Update progress bar
+            updateProgress(pageIndex);
+            
+            currentPage = pageIndex;
+        }
+
+        function updateNavigation(pageIndex) {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.disabled = pageIndex === 0;
+            nextBtn.disabled = pageIndex === totalPages - 1;
+        }
+
+        function updateTOC(pageIndex) {
+            document.querySelectorAll('.toc-item').forEach((item, index) => {
+                item.classList.remove('active');
+                if (index === pageIndex) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        function updateProgress(pageIndex) {
+            const progress = (pageIndex / (totalPages - 1)) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages - 1) {
+                showPage(currentPage + 1);
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 0) {
+                showPage(currentPage - 1);
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('hidden');
+            
+            // On mobile, use different class
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('visible');
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowLeft') {
+                previousPage();
+            } else if (event.key === 'ArrowRight') {
+                nextPage();
+            } else if (event.key === 'Escape') {
+                toggleSidebar();
+            }
+        });
+
+        // Initialize
+        updateNavigation(0);
+        updateProgress(0);
+
+        // Auto-hide sidebar on mobile
+        if (window.innerWidth <= 768) {
+            document.getElementById('sidebar').classList.add('hidden');
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9862c16ee261bf3e',t:'MTc1OTA1NzQyMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
